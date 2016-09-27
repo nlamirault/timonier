@@ -1,6 +1,5 @@
 # Timonier
 
-[![License GPL 2][badge-license]][LICENSE]
 [![Coverage Status](https://coveralls.io/repos/nlamirault/timonier/badge.png?branch=master)](https://coveralls.io/r/nlamirault/timonier?branch=master)
 
 Master :
@@ -11,12 +10,7 @@ Develop:
 * [![Melpa Status](https://melpa.org/packages/timonier-badge.svg)](https://melpa.org/#/timonier)
 * [![Circle CI](https://circleci.com/gh/nlamirault/timonier/tree/develop.svg?style=svg)](https://circleci.com/gh/nlamirault/timonier/tree/develop)
 
-``timonier`` allows you to search using multiple search tools:
-Supported backends are :
-
-* [ag][]
-* [pt][]
-* [sift][]
+``timonier`` is an Emacs frontend for a [Kubernetes][] cluster.
 
 
 ## Installation
@@ -32,6 +26,16 @@ or [Cask][]:
 
 ## Usage
 
+* Setup the Kubernetes proxy endpoint:
+
+        (setq timonier-k8s-proxy "http://localhost:8001")
+
+* Display the dashboard:
+
+        M-x timonier-k8s
+
+
+![Timonier](timonier-0.1.0.png)
 
 
 ## Development
