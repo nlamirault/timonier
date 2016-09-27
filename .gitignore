@@ -1,0 +1,10 @@
+# Emacs
+*~
+
+# Emacslisp
+.cask
+elpa
+.projectile
+*.elc
+test/sandbox/
+
