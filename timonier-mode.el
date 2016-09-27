@@ -268,15 +268,16 @@
 (defun timonier-k8s ()
   "Display informations about the Kubernetes cluster."
   (interactive)
-  (timonier-k8s-mode-with-widget
-   "Kubernetes"
-   (let ((nodes (timonier--assoc-cdr 'items (timonier--k8s-get-nodes)))
-         (services (timonier--assoc-cdr 'items (timonier--k8s-get-services)))
-         (pods (timonier--assoc-cdr 'items (timonier--k8s-get-pods))))
-     (timonier--k8s-mode-render-nodes nodes)
-     (timonier--k8s-mode-render-services services)
-     (timonier--k8s-mode-render-pods pods)
-     )))
+  (timonier--with-k8s
+   (timonier-k8s-mode-with-widget
+    "Kubernetes"
+    (let ((nodes (timonier--assoc-cdr 'items (timonier--k8s-get-nodes)))
+          (services (timonier--assoc-cdr 'items (timonier--k8s-get-services)))
+          (pods (timonier--assoc-cdr 'items (timonier--k8s-get-pods))))
+      (timonier--k8s-mode-render-nodes nodes)
+      (timonier--k8s-mode-render-services services)
+      (timonier--k8s-mode-render-pods pods)
+      ))))
 
 
 

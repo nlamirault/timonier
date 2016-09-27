@@ -21,6 +21,11 @@
 (require 'timonier-custom)
 (require 'timonier-utils)
 
+(defmacro timonier--with-k8s (&rest body)
+  `(condition-case err
+       ,@body
+     (error (message "[Kubernetes] Error with API: %s" err))))
+
 
 (defun timonier--k8s-get-uri (uri)
   "Retrieve the Kubernetes API complete url using the Kubernetes proxy.
@@ -41,6 +46,7 @@
   (declare (indent 1) (debug t))
   `(let* ((response (timonier--k8s-get-api))
           (,api-version (elt (cdadr response) 0)))
+     (message "[k8s] API version: %s" ,api-version)
      (if ,api-version
          ,@body
        (message "[Timonier] Can't retrieve Kubernetes version: %s" response))))
