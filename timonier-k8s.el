@@ -20,6 +20,8 @@
 
 (require 'timonier-custom)
 (require 'timonier-utils)
+(require 'timonier-io)
+
 
 (defmacro timonier--with-k8s (&rest body)
   `(condition-case err

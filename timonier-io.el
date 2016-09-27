@@ -1,4 +1,4 @@
-;;; timonier-utils.el --- Some tools for Timonier
+;;; timonier-io.el --- I/O tools for Timonier
 
 ;; Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
@@ -16,6 +16,7 @@
 ;;; Commentary:
 
 ;;; Code:
+
 
 (defun timonier--assoc-cdr (key list)
   (let ((result (cdr (assoc key list))))

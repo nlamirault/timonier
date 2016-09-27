@@ -34,6 +34,15 @@ or [Cask][]:
 
         M-x timonier-k8s
 
+* In the buffer:
+
+Keybinding           | Description
+---------------------|------------------------------------------------------------
+<kbd>N</kbd>         | launch Nodes menu popup
+<kbd>P</kbd>         | launch Pods menu popup
+<kbd>S</kbd>         | launch Services menu popup
+<kbd>q</kbd>         | quit
+
 
 ![Timonier](timonier-0.1.0.png)
 

@@ -23,10 +23,13 @@
 
 (require 'f)
 (require 's)
+(require 'magit-popup)
 
 
 (require 'timonier-custom)
+(require 'timonier-io)
 (require 'timonier-k8s)
+
 
 
 ;; ------------------
@@ -48,6 +51,13 @@
   "Prefix for `timonier-k8s-mode'."
   :group 'timonier-k8s-mode)
 
+(defcustom timonier-k8s-mode-line
+  '(:eval (format " Timonier/Kubernetes " ))
+          "Mode line lighter for Timonier."
+  :group 'timonier-k8s-mode
+  :type 'sexp
+  :risky t)
+
 
 ;; ------------------
 ;; Faces
@@ -59,31 +69,40 @@
   :tag "Timonier Kubernetes mode faces"
   :group 'timonier-k8s-mode)
 
-(defface timonier-k8s-mode-pod
+(defface timonier-k8s-mode-title-face
+  '((t :inherit font-lock-builtin-face))
+  "Face used for buffer's title."
+  :group 'timonier-k8s-mode)
+
+(defface timonier-k8s-mode-key-face
+  '((t :weight bold :inherit font-lock-keyword-face))
+  "Face used in the Timonier buffer."
+  :group 'timonier-k8s-mode-faces)
+
+(defface timonier-k8s-mode-pod-face
   '((t :weight bold :inherit font-lock-warning-name-face))
   "Face used in the Timonier buffer."
   :group 'timonier-k8s-mode-faces)
 
-(defface timonier-k8s-mode-service
+(defface timonier-k8s-mode-service-face
   '((t :weight bold :inherit font-lock-warning-name-face))
   "Face used in the Timonier buffer."
   :group 'timonier-k8s-mode-faces)
 
-(defface timonier-k8s-mode-node
+(defface timonier-k8s-mode-node-face
   '((t :weight bold :inherit font-lock-warning-name-face))
   "Face used in the Timonier buffer."
   :group 'timonier-k8s-mode-faces)
 
-(defface timonier-k8s-mode-namespace
-  '((t :inherit font-lock-comment-face))
+(defface timonier-k8s-mode-namespace-face
+  '((t :inherit font-lock-doc-face))
   "Face used in the Timonier buffer"
   :group 'timonier-k8s-mode-faces)
 
-(defface timonier-k8s-mode-pod-status
+(defface timonier-k8s-mode-pod-status-face
   '((t :inherit font-lock-string-face))
   "Face used in the Timonier buffer"
   :group 'timonier-k8s-mode-faces)
-
 
 (defvar timonier-k8s-mode-padding 2
   "The number of columns used for padding on the left side of the buffer.")
@@ -138,21 +157,59 @@
     map)
   "Keymap for Kubernetes nodes.")
 
+
+(defun timonier-k8s-node-description ()
+  )
+
+(defun timonier-k8s-node-logs ()
+  )
+
+(defun timonier-k8s-pod-description ()
+  )
+
+(defun timonier-k8s-service-description ()
+  )
+
+(magit-define-popup timonier-k8s-nodes-popup
+  "Popup for Kubernetes pods."
+  'timonier
+  :man-page "kubectl --help"
+  :actions  '((?D "Describe" timonier-k8s-node-description)
+              (?L "Logs" timonier-k8s-node-logs)
+              ))
+
+(magit-define-popup timonier-k8s-services-popup
+  "Popup for Kubernetes services."
+  'timonier
+  :man-page "kubectl --help"
+  :actions  '((?D "Describe" timonier-k8s-service-description)
+              ))
+
+(magit-define-popup timonier-k8s-pods-popup
+  "Popup for Kubernetes pods."
+  'timonier
+  :man-page "kubectl --help"
+  :actions  '((?D "Describe" timonier-k8s-pod-description)
+              ))
+
 (defvar timonier-k8s-mode-map
   (let ((map (make-keymap)))
-    (define-key map "S" timonier-k8s-service-command-map)
-    (define-key map "P" timonier-k8s-pod-command-map)
-    (define-key map "N" timonier-k8s-node-command-map)
+    (define-key map "s" timonier-k8s-service-command-map)
+    (define-key map "S" 'timonier-k8s-services-popup)
+    (define-key map "p" timonier-k8s-pod-command-map)
+    (define-key map "P" 'timonier-k8s-pods-popup)
+    (define-key map "n" timonier-k8s-node-command-map)
+    (define-key map "N" 'timonier-k8s-nodes-popup)
+    (define-key map "?" 'timonier-k8s-mode-popup)
     (define-key map (kbd "q") 'timonier-k8s-mode-quit)
     map)
   "Keymap for `timonier-k8s-mode' after `timonier-k8s-keymap-prefix' was pressed.")
 
 
-
 (define-derived-mode timonier-k8s-mode tabulated-list-mode
   "Timonier Kubernetes mode"
   "Major mode for Timonier."
-  :group 'dionysos
+  :group 'timonier
   )
 
 
@@ -164,12 +221,14 @@
     (widget-insert
      (format " %s %s"
              (propertize (plist-get pod-data 'name)
-                         'face 'timonier-k8s-mode-pod)
+                         'face 'timonier-k8s-mode-pod-face)
              (propertize (plist-get pod-data 'status)
-                         'face 'timonier-k8s-mode-pod-status))
-     (format  "\n   Namespace: %s\n\n"
-             (propertize (plist-get pod-data 'namespace)
-                         'face 'timonier-k8s-mode-namespace)))))
+                         'face 'timonier-k8s-mode-pod-status-face))
+     (format  "\n   %s: %s\n\n"
+              (propertize "Namespace"
+                          'face 'timonier-k8s-mode-key-face)
+              (propertize (plist-get pod-data 'namespace)
+                          'face 'timonier-k8s-mode-namespace-face)))))
 
 
 (defun timonier--k8s-mode-render-pods (pods)
@@ -190,17 +249,26 @@
     (widget-insert
      (format " %s"
              (propertize (plist-get service-data 'name)
-                         'face 'timonier-k8s-mode-service))
-     (format "\n  Namespace: %s"
+                         'face 'timonier-k8s-mode-service-face))
+     (format "\n  %s: %s"
+             (propertize "Namespace"
+                          'face 'timonier-k8s-mode-key-face)
              (propertize (plist-get service-data 'namespace)
-                         'face 'timonier-k8s-mode-namespace))
-     (format "\n  ClusterIP: %s" (plist-get service-data 'cluster-ip))
-     (format "\n  Endpoints: %s"
+                         'face 'timonier-k8s-mode-namespace-face))
+     (format "\n  %s: %s"
+             (propertize "ClusterIP"
+                          'face 'timonier-k8s-mode-key-face)
+             (plist-get service-data 'cluster-ip))
+     (format "\n  %s: %s"
+             (propertize "Endpoints"
+                         'face 'timonier-k8s-mode-key-face)
              (propertize
               (s-join ":" (mapcar (lambda (elt)
                                     (format "%s" elt))
                                   (plist-get service-data 'ports)))))
-     (format "\n  Labels: %s\n\n"
+     (format "\n  %s: %s\n\n"
+             (propertize "Labels"
+                         'face 'timonier-k8s-mode-key-face)
              (propertize
               (s-join " " (plist-get service-data 'labels)))))))
 
@@ -223,10 +291,12 @@
     (widget-insert
      (format " %s %s"
              (propertize (plist-get node-data 'name)
-                         'face 'timonier-k8s-mode-service)
+                         'face 'timonier-k8s-mode-service-face)
              (propertize (plist-get node-data 'creation)
-                         'face 'timonier-k8s-mode-namespace))
-     (format "\n  Labels: %s\n\n"
+                         'face 'timonier-k8s-mode-namespace-face))
+     (format "\n  %s: %s\n\n"
+             (propertize "Labels"
+                         'face 'timonier-k8s-mode-key-face)
              (propertize
               (s-join " " (plist-get node-data 'labels)))))))
 
@@ -249,28 +319,14 @@
 (defvar timonier-k8s-mode-history nil)
 
 
-
-;;;###autoload
-(defun timonier-k8s-pods ()
-  (interactive
-   (list (read-from-minibuffer "Kubernetes Proxy : "
-                               (car timonier-k8s-mode-history)
-                               nil
-                               nil
-                               'timonier-k8s-mode-history)))
-  (timonier-k8s-mode-with-widget
-   (propertize "Kubernetes")
-   timonier--k8s-mode-render-pods (timonier--k8s-get-pods)))
-
-
-
 ;;;###autoload
 (defun timonier-k8s ()
   "Display informations about the Kubernetes cluster."
   (interactive)
   (timonier--with-k8s
    (timonier-k8s-mode-with-widget
-    "Kubernetes"
+    (propertize "Kubernetes"
+                'face 'timonier-k8s-mode-title-face)
     (let ((nodes (timonier--assoc-cdr 'items (timonier--k8s-get-nodes)))
           (services (timonier--assoc-cdr 'items (timonier--k8s-get-services)))
           (pods (timonier--assoc-cdr 'items (timonier--k8s-get-pods))))

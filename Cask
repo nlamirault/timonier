@@ -23,6 +23,7 @@
 ;; Development
 (development
  (depends-on "request" "0.2.0")
+ (depends-on "magit-popup" "2.8.0")
  (depends-on "s" "1.11.0")
  (depends-on "dash" "2.12.1")
  (depends-on "ansi" "0.4.0")
