@@ -44,6 +44,11 @@
   :type 'string
   :group 'timonier-k8s-mode)
 
+(defcustom timonier-k8s-keymap-prefix "C-c 8"
+  "Prefix for `timonier-k8s-mode'."
+  :group 'timonier-k8s-mode)
+
+
 ;; ------------------
 ;; Faces
 ;; ------------------
@@ -118,11 +123,30 @@
 (defvar timonier-k8s-mode-hook nil)
 
 
+(defvar timonier-k8s-service-command-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for Kubernetes services.")
+
+(defvar timonier-k8s-pod-command-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for Kubernetes pods.")
+
+(defvar timonier-k8s-node-command-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for Kubernetes nodes.")
+
 (defvar timonier-k8s-mode-map
   (let ((map (make-keymap)))
+    (define-key map "S" timonier-k8s-service-command-map)
+    (define-key map "P" timonier-k8s-pod-command-map)
+    (define-key map "N" timonier-k8s-node-command-map)
     (define-key map (kbd "q") 'timonier-k8s-mode-quit)
     map)
-  "Keymap for `timonier-k8s-mode' major mode.")
+  "Keymap for `timonier-k8s-mode' after `timonier-k8s-keymap-prefix' was pressed.")
+
 
 
 (define-derived-mode timonier-k8s-mode tabulated-list-mode
