@@ -36,11 +36,19 @@ or [Cask][]:
 
 * In the buffer:
 
+Launch the timonier menu using the key : <kbd>C-c C-k</kbd>
+
 Keybinding           | Description
 ---------------------|------------------------------------------------------------
-<kbd>N</kbd>         | launch Nodes menu popup
-<kbd>P</kbd>         | launch Pods menu popup
-<kbd>S</kbd>         | launch Services menu popup
+<kbd>g</kbd>         | go to the news pod
+<kbd>h</kbd>         | go to the previous pod
+<kbd>P</kbd>         | describe current pod
+<kbd>k</kbd>         | go to the next service
+<kbd>l</kbd>         | go to the previous service
+<kbd>S</kbd>         | describe the current service
+<kbd>i</kbd>         | go to the next node
+<kbd>j</kbd>         | go to the previous node
+<kbd>N</kbd>         | describe the current service
 <kbd>q</kbd>         | quit
 
 
