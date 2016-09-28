@@ -54,6 +54,24 @@
        (message "[Timonier] Can't retrieve Kubernetes version: %s" response))))
 
 
+(defun timonier--k8s-get-namespaces ()
+  "Retrieve namespaces from a Kubernetes cluster."
+  (timonier--with-k8s-api-version api-version
+    (timonier--perform-http-request
+     "GET" (timonier--k8s-get-uri (s-concat "/api/" api-version "/namespaces")) '() 200)))
+
+(defun timonier--k8s-extract-namespace-informations (namespace)
+  "Extract commons informations from `NAMESPACE'.
+Result is a property list.  Keys are : 'name and 'status."
+  (let ((metadata (timonier--assoc-cdr 'metadata namespace))
+        (status (timonier--assoc-cdr 'status namespace))
+        properties)
+    (setq properties
+          (list 'name (timonier--assoc-cdr 'name metadata)
+                'status (timonier--assoc-cdr 'phase status)))
+    properties))
+
+
 (defun timonier--k8s-get-pods ()
   "Retrieve pods from a Kubernetes cluster."
   (timonier--with-k8s-api-version api-version
@@ -84,7 +102,7 @@ Result is a property list.  Keys are : 'name,  'namespace and 'status."
 
 (defun timonier--k8s-extract-node-informations (node)
   "Extract commons informations from `NODE'.
-Result is a property list.  Keys are : 'name,  'namespace."
+Result is a property list.  Keys are : 'name,  'labels and 'creation."
   (let ((metadata (timonier--assoc-cdr 'metadata node))
         (infos (timonier--assoc-cdr 'nodeInfo node))
         properties)
@@ -94,6 +112,33 @@ Result is a property list.  Keys are : 'name,  'namespace."
                 'creation (timonier--assoc-cdr 'creationTimestamp metadata)))
     properties))
 
+
+(defun timonier--k8s-extract-node-description (node)
+  "Extract complete description from `NODE'."
+  (let* ((metadata  (timonier--assoc-cdr 'metadata node))
+         (spec (timonier--assoc-cdr 'spec node))
+         (status (timonier--assoc-cdr 'status node))
+         (addresses (timonier--assoc-cdr 'addresses status))
+         (node-info (timonier--assoc-cdr 'nodeInfo status))
+         properties)
+    (setq properties
+          (list 'name (timonier--assoc-cdr 'name metadata)
+                'labels (mapcar 'cdr (timonier--assoc-cdr 'labels metadata))
+                'creation (timonier--assoc-cdr 'creationTimestamp metadata)
+                'external-id (timonier--assoc-cdr 'externalID spec)
+                'addresses (mapcar (lambda (adr)
+                                     (mapcar 'cdr adr))
+                                   addresses)
+                'os-image (timonier--assoc-cdr 'osImage node-info)
+                'system-uuid (timonier--assoc-cdr 'systemUUID node-info)
+                'boot-id (timonier--assoc-cdr 'bootID node-info)
+                'kernel-version (timonier--assoc-cdr 'kernelVersion node-info)
+                'container-runtime (timonier--assoc-cdr 'containerRuntimeVersion node-info)
+                'kubelet-version (timonier--assoc-cdr 'kubeletVersion node-info)
+                'kubeproxy-version (timonier--assoc-cdr 'kubeProxyVersion node-info)
+                'os (timonier--assoc-cdr 'operatingSystem node-info)
+                'architecture (timonier--assoc-cdr 'architecture node-info)))
+    properties))
 
 (defun timonier--k8s-get-services ()
   "Retrieve services from a Kubernetes cluster."
