@@ -120,7 +120,6 @@
 
 (defun timonier--k8s-mode-current-entity (type)
   "Return the current Kubernetes entities at point using `TYPE'."
-  (interactive)
   (get-text-property (point) type))
 
 
@@ -189,17 +188,27 @@
 
 (defun timonier-k8s-mode-describe-node ()
   (interactive)
-  )
+  (let ((node (timonier--k8s-mode-current-entity :k8s-node)))
+    (if node
+        (message "%s" node)
+      (message "No node available."))))
 
 
 (defun timonier-k8s-mode-describe-pod ()
   (interactive)
-  )
+  (let ((pod (timonier--k8s-mode-current-entity :k8s-pod)))
+    (if pod
+        (message "%s" pod)
+      (message "No pod available."))))
+
 
 
 (defun timonier-k8s-mode-describe-service ()
   (interactive)
-  )
+  (let ((service (timonier--k8s-mode-current-entity :k8s-service)))
+    (if service
+        (message "%s" service)
+      (message "No service available."))))
 
 ;; ------------------
 ;; Mode
@@ -272,18 +281,19 @@ _q_: quit
   (let* ((pod-data (timonier--k8s-extract-pod-informations pod)))
     (insert (all-the-icons-octicon "package"))
     (let ((start (point)))
-      (put-text-property start (point) :k8s-pod pod))
-    (widget-insert
-     (format " %s %s"
-             (propertize (plist-get pod-data 'name)
-                         'face 'timonier-k8s-mode-pod-face)
-             (propertize (plist-get pod-data 'status)
-                         'face 'timonier-k8s-mode-pod-status-face))
-     (format  "\n   %s: %s\n\n"
-              (propertize "Namespace"
-                          'face 'timonier-k8s-mode-key-face)
-              (propertize (plist-get pod-data 'namespace)
-                          'face 'timonier-k8s-mode-namespace-face)))))
+      (widget-insert
+       (format " %s %s"
+               (propertize (plist-get pod-data 'name)
+                           'face 'timonier-k8s-mode-pod-face)
+               (propertize (plist-get pod-data 'status)
+                           'face 'timonier-k8s-mode-pod-status-face)))
+      (put-text-property start (point) :k8s-pod pod)
+      (widget-insert
+       (format  "\n   %s: %s\n\n"
+                (propertize "Namespace"
+                            'face 'timonier-k8s-mode-key-face)
+                (propertize (plist-get pod-data 'namespace)
+                            'face 'timonier-k8s-mode-namespace-face))))))
 
 
 (defun timonier--k8s-mode-render-pods (pods)
@@ -300,32 +310,33 @@ _q_: quit
   (let* ((service-data (timonier--k8s-extract-service-informations service)))
     (insert (all-the-icons-octicon "link-external"))
     (let ((start (point)))
-      (put-text-property start (point) :k8s-service service))
-    (widget-insert
-     (format " %s"
-             (propertize (plist-get service-data 'name)
-                         'face 'timonier-k8s-mode-service-face))
-     (format "\n  %s: %s"
-             (propertize "Namespace"
-                         'face 'timonier-k8s-mode-key-face)
-             (propertize (plist-get service-data 'namespace)
-                         'face 'timonier-k8s-mode-namespace-face))
-     (format "\n  %s: %s"
-             (propertize "ClusterIP"
-                         'face 'timonier-k8s-mode-key-face)
-             (plist-get service-data 'cluster-ip))
-     (format "\n  %s: %s"
-             (propertize "Endpoints"
-                         'face 'timonier-k8s-mode-key-face)
-             (propertize
-              (s-join ":" (mapcar (lambda (elt)
-                                    (format "%s" elt))
-                                  (plist-get service-data 'ports)))))
-     (format "\n  %s: %s\n\n"
-             (propertize "Labels"
-                         'face 'timonier-k8s-mode-key-face)
-             (propertize
-              (s-join " " (plist-get service-data 'labels)))))))
+      (widget-insert
+       (format " %s"
+               (propertize (plist-get service-data 'name)
+                           'face 'timonier-k8s-mode-service-face)))
+      (put-text-property start (point) :k8s-service service)
+      (widget-insert
+       (format "\n  %s: %s"
+               (propertize "Namespace"
+                           'face 'timonier-k8s-mode-key-face)
+               (propertize (plist-get service-data 'namespace)
+                           'face 'timonier-k8s-mode-namespace-face))
+       (format "\n  %s: %s"
+               (propertize "ClusterIP"
+                           'face 'timonier-k8s-mode-key-face)
+               (plist-get service-data 'cluster-ip))
+       (format "\n  %s: %s"
+               (propertize "Endpoints"
+                           'face 'timonier-k8s-mode-key-face)
+               (propertize
+                (s-join ":" (mapcar (lambda (elt)
+                                      (format "%s" elt))
+                                    (plist-get service-data 'ports)))))
+       (format "\n  %s: %s\n\n"
+               (propertize "Labels"
+                           'face 'timonier-k8s-mode-key-face)
+               (propertize
+                (s-join " " (plist-get service-data 'labels))))))))
 
 
 (defun timonier--k8s-mode-render-services (services)
@@ -342,18 +353,19 @@ _q_: quit
   (let* ((node-data (timonier--k8s-extract-node-informations node)))
     (insert (all-the-icons-octicon "server"))
     (let ((start (point)))
-      (put-text-property start (point) :k8s-node node))
-    (widget-insert
-     (format " %s %s"
-             (propertize (plist-get node-data 'name)
-                         'face 'timonier-k8s-mode-service-face)
-             (propertize (plist-get node-data 'creation)
-                         'face 'timonier-k8s-mode-namespace-face))
-     (format "\n  %s: %s\n\n"
-             (propertize "Labels"
-                         'face 'timonier-k8s-mode-key-face)
-             (propertize
-              (s-join " " (plist-get node-data 'labels)))))))
+      (widget-insert
+       (format " %s %s"
+               (propertize (plist-get node-data 'name)
+                           'face 'timonier-k8s-mode-service-face)
+               (propertize (plist-get node-data 'creation)
+                           'face 'timonier-k8s-mode-namespace-face)))
+      (put-text-property start (point) :k8s-node node)
+      (widget-insert
+       (format "\n  %s: %s\n\n"
+               (propertize "Labels"
+                           'face 'timonier-k8s-mode-key-face)
+               (propertize
+                (s-join " " (plist-get node-data 'labels))))))))
 
 
 (defun timonier--k8s-mode-render-nodes (nodes)
