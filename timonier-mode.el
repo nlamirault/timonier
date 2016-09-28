@@ -21,10 +21,10 @@
 (require 'widget)
 (require 'cl-lib)
 
+(require 'all-the-icons)
 (require 'f)
-(require 's)
 (require 'hydra)
-
+(require 's)
 
 (require 'timonier-custom)
 (require 'timonier-io)
@@ -118,8 +118,45 @@
 
 
 ;; ------------------
-;; I/O
+;; Modes
 ;; ------------------
+
+
+(defmacro timonier-k8s-mode-with-widget (title &rest body)
+  `(progn
+     (set-buffer (get-buffer-create timonier-k8s-mode-buffer))
+     (switch-to-buffer timonier-k8s-mode-buffer)
+     (kill-all-local-variables)
+     (let ((inhibit-read-only t))
+       (erase-buffer)
+       (remove-overlays)
+       (widget-insert (format "\n[%s]\n\n" ,title))
+       ,@body)
+     (use-local-map widget-keymap)
+     (widget-setup)
+     (timonier-k8s-mode)
+     (widget-minor-mode)
+     (goto-char 0)))
+
+
+(defmacro timonier-k8s-mode-description-with-widget (title &rest body)
+  `(progn
+     (set-buffer (get-buffer-create timonier-k8s-description-mode-buffer))
+     (switch-to-buffer timonier-k8s-description-mode-buffer)
+     (kill-all-local-variables)
+     (let ((inhibit-read-only t))
+       (erase-buffer)
+       (remove-overlays)
+       (widget-insert (format "\n[%s]\n\n" ,title))
+       ,@body)
+     (use-local-map widget-keymap)
+     (widget-setup)
+     (timonier-k8s-description-mode)
+     (widget-minor-mode)
+     (goto-char 0)))
+
+
+(defvar timonier-k8s-mode-hook nil)
 
 
 (defun timonier-k8s-mode-quit ()
@@ -292,47 +329,6 @@
         (message "%s" service)
       (message "No service available."))))
 
-;; ------------------
-;; Modes
-;; ------------------
-
-
-(defmacro timonier-k8s-mode-with-widget (title &rest body)
-  `(progn
-     (set-buffer (get-buffer-create timonier-k8s-mode-buffer))
-     (switch-to-buffer timonier-k8s-mode-buffer)
-     (kill-all-local-variables)
-     (let ((inhibit-read-only t))
-       (erase-buffer)
-       (remove-overlays)
-       (widget-insert (format "\n[%s]\n\n" ,title))
-       ,@body)
-     (use-local-map widget-keymap)
-     (widget-setup)
-     (timonier-k8s-mode)
-     (widget-minor-mode)
-     (goto-char 0)))
-
-
-(defmacro timonier-k8s-mode-description-with-widget (title &rest body)
-  `(progn
-     (set-buffer (get-buffer-create timonier-k8s-description-mode-buffer))
-     (switch-to-buffer timonier-k8s-description-mode-buffer)
-     (kill-all-local-variables)
-     (let ((inhibit-read-only t))
-       (erase-buffer)
-       (remove-overlays)
-       (widget-insert (format "\n[%s]\n\n" ,title))
-       ,@body)
-     (use-local-map widget-keymap)
-     (widget-setup)
-     (timonier-k8s-description-mode)
-     (widget-minor-mode)
-     (goto-char 0)))
-
-
-
-(defvar timonier-k8s-mode-hook nil)
 
 
 (defhydra timonier-k8s-hydra (:color blue :hint none)

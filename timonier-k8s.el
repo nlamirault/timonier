@@ -18,6 +18,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (require 'timonier-custom)
 (require 'timonier-utils)
 (require 'timonier-io)
