@@ -108,6 +108,11 @@
   "Face used in the Timonier buffer"
   :group 'timonier-k8s-mode-faces)
 
+(defface timonier-k8s-mode-namespace-status-face
+  '((t :inherit font-lock-string-face))
+  "Face used in the Timonier buffer"
+  :group 'timonier-k8s-mode-faces)
+
 (defvar timonier-k8s-mode-padding 2
   "The number of columns used for padding on the left side of the buffer.")
 
@@ -491,6 +496,30 @@ _q_: quit
   (widget-insert "\n"))
 
 
+
+(defun timonier--k8s-mode-render-namespace (namespace)
+  "Render a Kubernetes `NAMESPACE' to the Timonier buffer."
+  (let* ((namespace-data (timonier--k8s-extract-namespace-informations namespace)))
+    (insert (all-the-icons-octicon "organization"))
+    (let ((start (point)))
+      (widget-insert
+       (format " %s %s\n"
+               (propertize (plist-get namespace-data 'name)
+                           'face 'timonier-k8s-mode-pod-face)
+               (propertize (plist-get namespace-data 'status)
+                           'face 'timonier-k8s-mode-namespace-status-face)))
+      (put-text-property start (point) :k8s-namespace namespace))))
+
+
+(defun timonier--k8s-mode-render-namespaces (namespaces)
+  "Render Kubernetes `NAMESPACES'."
+  (widget-insert (format "\n== NAMESPACES ==\n\n"))
+  (dotimes (i (length namespaces))
+    (let ((namespace (elt namespaces i)))
+      (timonier--k8s-mode-render-namespace namespace)))
+  (widget-insert "\n"))
+
+
 ;; ------------------
 ;; API
 ;; ------------------
@@ -506,9 +535,11 @@ _q_: quit
    (timonier-k8s-mode-with-widget
     (propertize "Kubernetes"
                 'face 'timonier-k8s-mode-title-face)
-    (let ((nodes (timonier--assoc-cdr 'items (timonier--k8s-get-nodes)))
+    (let ((namespaces (timonier--assoc-cdr 'items (timonier--k8s-get-namespaces)))
+          (nodes (timonier--assoc-cdr 'items (timonier--k8s-get-nodes)))
           (services (timonier--assoc-cdr 'items (timonier--k8s-get-services)))
           (pods (timonier--assoc-cdr 'items (timonier--k8s-get-pods))))
+      (timonier--k8s-mode-render-namespaces namespaces)
       (timonier--k8s-mode-render-nodes nodes)
       (timonier--k8s-mode-render-services services)
       (timonier--k8s-mode-render-pods pods)
