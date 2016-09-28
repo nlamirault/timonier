@@ -125,7 +125,4 @@ Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 [overseer]: https://github.com/tonini/overseer.el
 
-[ag]: https://github.com/ggreer/the_silver_searcher
-[pt]: https://github.com/monochromegane/the_platinum_searcher
-[sift]: https://sift-tool.org/
-[ripgrep]: https://github.com/BurntSushi/ripgrep
+[Kubernetes]: https://kubernetes.io/
