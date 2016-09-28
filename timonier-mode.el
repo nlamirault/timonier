@@ -46,6 +46,11 @@
   :type 'string
   :group 'timonier-k8s-mode)
 
+(defcustom timonier-k8s-description-mode-buffer "*timonier-k8s-desc*"
+  "The Timonier kubernetes entity description buffer name."
+  :type 'string
+  :group 'timonier-k8s-mode)
+
 (defcustom timonier-k8s-keymap-prefix "C-c C-k"
   "Prefix for `timonier-k8s-mode'."
   :group 'timonier-k8s-mode)
@@ -190,7 +195,79 @@
   (interactive)
   (let ((node (timonier--k8s-mode-current-entity :k8s-node)))
     (if node
-        (message "%s" node)
+        (progn
+          (let ((node-data (timonier--k8s-extract-node-description node)))
+            (timonier-k8s-mode-description-with-widget
+             (propertize "Kubernetes / Nodes"
+                         'face 'timonier-k8s-mode-title-face)
+             (widget-insert
+              (format "\n%s:"
+                      (propertize "Details"
+                                  'face 'timonier-k8s-mode-title-face))
+              (format "\n%s: %s"
+                      (propertize "Name"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'name)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Labels"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize
+                       (s-join " " (plist-get node-data 'labels))))
+              (format "\n%s: %s"
+                      (propertize "External ID"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'external-id)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n\n%s:"
+                      (propertize "System info"
+                                  'face 'timonier-k8s-mode-title-face))
+              (format "\n%s: %s"
+                      (propertize "System UUID"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'system-uuid)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Boot ID"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'boot-id)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Kernel Version"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'kernel-version)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "OS Image"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'os-image)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Container Runtime Version"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'container-runtime)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Kubelet Version"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'kubelet-version)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Kube-Proxy Version"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'kubeproxy-version)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Operation system"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'os)
+                                  'face 'timonier-k8s-mode-pod-face))
+              (format "\n%s: %s"
+                      (propertize "Architecture"
+                                  'face 'timonier-k8s-mode-key-face)
+                      (propertize (plist-get node-data 'architecture)
+                                  'face 'timonier-k8s-mode-pod-face))
+              ))))
       (message "No node available."))))
 
 
@@ -198,7 +275,7 @@
   (interactive)
   (let ((pod (timonier--k8s-mode-current-entity :k8s-pod)))
     (if pod
-        (message "%s" pod)
+        (message "Pod %s" pod)
       (message "No pod available."))))
 
 
@@ -211,14 +288,14 @@
       (message "No service available."))))
 
 ;; ------------------
-;; Mode
+;; Modes
 ;; ------------------
 
 
 (defmacro timonier-k8s-mode-with-widget (title &rest body)
   `(progn
      (set-buffer (get-buffer-create timonier-k8s-mode-buffer))
-     (switch-to-buffer-other-window timonier-k8s-mode-buffer)
+     (switch-to-buffer timonier-k8s-mode-buffer)
      (kill-all-local-variables)
      (let ((inhibit-read-only t))
        (erase-buffer)
@@ -230,6 +307,24 @@
      (timonier-k8s-mode)
      (widget-minor-mode)
      (goto-char 0)))
+
+
+(defmacro timonier-k8s-mode-description-with-widget (title &rest body)
+  `(progn
+     (set-buffer (get-buffer-create timonier-k8s-description-mode-buffer))
+     (switch-to-buffer timonier-k8s-description-mode-buffer)
+     (kill-all-local-variables)
+     (let ((inhibit-read-only t))
+       (erase-buffer)
+       (remove-overlays)
+       (widget-insert (format "\n[%s]\n\n" ,title))
+       ,@body)
+     (use-local-map widget-keymap)
+     (widget-setup)
+     (timonier-k8s-description-mode)
+     (widget-minor-mode)
+     (goto-char 0)))
+
 
 
 (defvar timonier-k8s-mode-hook nil)
@@ -269,6 +364,25 @@ _q_: quit
 
 
 (define-derived-mode timonier-k8s-mode tabulated-list-mode
+  "Timonier Kubernetes mode"
+  "Major mode for Timonier."
+  :group 'timonier
+  )
+
+
+(defun timonier-k8s-description-mode-quit ()
+  "Quit the Kubernetes description mode."
+  (interactive)
+  (kill-buffer timonier-k8s-description-mode-buffer))
+
+
+(defvar timonier-k8s-description-mode-map
+  (let ((map (make-keymap)))
+    (define-key map (kbd "q") 'timonier-k8s-description-mode-quit)
+    map))
+
+
+(define-derived-mode timonier-k8s-description-mode tabulated-list-mode
   "Timonier Kubernetes mode"
   "Major mode for Timonier."
   :group 'timonier
@@ -399,9 +513,6 @@ _q_: quit
       (timonier--k8s-mode-render-services services)
       (timonier--k8s-mode-render-pods pods)
       ))))
-
-
-
 
 
 (provide 'timonier-mode)
