@@ -23,13 +23,12 @@
 
 (require 'f)
 (require 's)
-(require 'magit-popup)
+(require 'hydra)
 
 
 (require 'timonier-custom)
 (require 'timonier-io)
 (require 'timonier-k8s)
-
 
 
 ;; ------------------
@@ -47,7 +46,7 @@
   :type 'string
   :group 'timonier-k8s-mode)
 
-(defcustom timonier-k8s-keymap-prefix "C-c 8"
+(defcustom timonier-k8s-keymap-prefix "C-c C-k"
   "Prefix for `timonier-k8s-mode'."
   :group 'timonier-k8s-mode)
 
@@ -119,9 +118,93 @@
   (kill-buffer timonier-k8s-mode-buffer))
 
 
+(defun timonier--k8s-mode-current-entity (type)
+  "Return the current Kubernetes entities at point using `TYPE'."
+  (interactive)
+  (get-text-property (point) type))
+
+
+(defun timonier--k8s-mode-next-entity (type)
+  "Move point to the next Kubernetes entity specified by `TYPE'."
+  (interactive)
+  (let ((pos (next-single-property-change (point) type)))
+    (if pos
+        (progn
+          (goto-char pos)
+          (unless (timonier--k8s-mode-current-entity type)
+            (let ((pos (next-single-property-change pos type)))
+              (when pos
+                (goto-char pos)))))
+      (message "No current position: %s" type))))
+
+
+(defun timonier--k8s-mode-prev-entity (type)
+  "Move point to the previous Kubernetes entity specified by `TYPE'."
+  (interactive)
+  (let ((pos (previous-single-property-change (point) type)))
+    (if pos
+        (progn
+          (goto-char pos)
+          (unless (timonier--k8s-mode-current-entity type)
+            (let ((pos (previous-single-property-change pos type)))
+              (when pos
+                (goto-char pos)))))
+      (message "No current position: %s" type))))
+
+
+(defun timonier-k8s-mode-next-pod ()
+  "Move point to the next Kubernetes pod."
+  (interactive)
+  (timonier--k8s-mode-next-entity :k8s-pod))
+
+
+(defun timonier-k8s-mode-prev-pod ()
+  "Move point to the previous Kubernetes pod."
+  (interactive)
+  (timonier--k8s-mode-prev-entity :k8s-pod))
+
+
+(defun timonier-k8s-mode-next-service ()
+  "Move point to the next Kubernetes service."
+  (interactive)
+  (timonier--k8s-mode-next-entity :k8s-service))
+
+
+(defun timonier-k8s-mode-prev-service ()
+  "Move point to the previous Kubernetes service."
+  (interactive)
+  (timonier--k8s-mode-prev-entity :k8s-service))
+
+(defun timonier-k8s-mode-next-node ()
+  "Move point to the next Kubernetes node."
+  (interactive)
+  (timonier--k8s-mode-next-entity :k8s-node))
+
+
+(defun timonier-k8s-mode-prev-node ()
+  "Move point to the previous Kubernetes node."
+  (interactive)
+  (timonier--k8s-mode-prev-entity :k8s-node))
+
+
+(defun timonier-k8s-mode-describe-node ()
+  (interactive)
+  )
+
+
+(defun timonier-k8s-mode-describe-pod ()
+  (interactive)
+  )
+
+
+(defun timonier-k8s-mode-describe-service ()
+  (interactive)
+  )
+
 ;; ------------------
 ;; Mode
 ;; ------------------
+
 
 (defmacro timonier-k8s-mode-with-widget (title &rest body)
   `(progn
@@ -139,71 +222,41 @@
      (widget-minor-mode)
      (goto-char 0)))
 
+
 (defvar timonier-k8s-mode-hook nil)
 
 
-(defvar timonier-k8s-service-command-map
-  (let ((map (make-sparse-keymap)))
-    map)
-  "Keymap for Kubernetes services.")
+(defhydra timonier-k8s-hydra (:color blue :hint none)
+  "
+             [ Timonier / Kubernetes ]
 
-(defvar timonier-k8s-pod-command-map
-  (let ((map (make-sparse-keymap)))
-    map)
-  "Keymap for Kubernetes pods.")
+^Node^                      ^Service^                      ^Pod^
+--------------------------------------------------------------------------------------
+_i_: go to next node        _k_: go to next service        _g_: go to next pod
+_j_: go to previous node    _l_: go to previous service    _h_: go to previous pod
+_N_: describe current node  _S_: describe current service  _P_: describe current pod
 
-(defvar timonier-k8s-node-command-map
-  (let ((map (make-sparse-keymap)))
-    map)
-  "Keymap for Kubernetes nodes.")
+_q_: quit
+"
+  ("g" timonier-k8s-mode-next-pod)
+  ("h" timonier-k8s-mode-prev-pod)
+  ("P" timonier-k8s-mode-describe-pod)
 
+  ("k" timonier-k8s-mode-next-service)
+  ("l" timonier-k8s-mode-prev-service)
+  ("S" timonier-k8s-mode-describe-service)
 
-(defun timonier-k8s-node-description ()
-  )
+  ("i" timonier-k8s-mode-next-node)
+  ("j" timonier-k8s-mode-prev-node)
+  ("N" timonier-k8s-mode-describe-node)
 
-(defun timonier-k8s-node-logs ()
-  )
+  ("q"  nil "quit" :hint t :color red))
 
-(defun timonier-k8s-pod-description ()
-  )
-
-(defun timonier-k8s-service-description ()
-  )
-
-(magit-define-popup timonier-k8s-nodes-popup
-  "Popup for Kubernetes pods."
-  'timonier
-  :man-page "kubectl --help"
-  :actions  '((?D "Describe" timonier-k8s-node-description)
-              (?L "Logs" timonier-k8s-node-logs)
-              ))
-
-(magit-define-popup timonier-k8s-services-popup
-  "Popup for Kubernetes services."
-  'timonier
-  :man-page "kubectl --help"
-  :actions  '((?D "Describe" timonier-k8s-service-description)
-              ))
-
-(magit-define-popup timonier-k8s-pods-popup
-  "Popup for Kubernetes pods."
-  'timonier
-  :man-page "kubectl --help"
-  :actions  '((?D "Describe" timonier-k8s-pod-description)
-              ))
 
 (defvar timonier-k8s-mode-map
   (let ((map (make-keymap)))
-    (define-key map "s" timonier-k8s-service-command-map)
-    (define-key map "S" 'timonier-k8s-services-popup)
-    (define-key map "p" timonier-k8s-pod-command-map)
-    (define-key map "P" 'timonier-k8s-pods-popup)
-    (define-key map "n" timonier-k8s-node-command-map)
-    (define-key map "N" 'timonier-k8s-nodes-popup)
-    (define-key map "?" 'timonier-k8s-mode-popup)
-    (define-key map (kbd "q") 'timonier-k8s-mode-quit)
-    map)
-  "Keymap for `timonier-k8s-mode' after `timonier-k8s-keymap-prefix' was pressed.")
+    (define-key map (kbd timonier-k8s-keymap-prefix) 'timonier-k8s-hydra/body)
+    map))
 
 
 (define-derived-mode timonier-k8s-mode tabulated-list-mode
@@ -218,6 +271,8 @@
   ;; (message "Pod: %s" pod)
   (let* ((pod-data (timonier--k8s-extract-pod-informations pod)))
     (insert (all-the-icons-octicon "package"))
+    (let ((start (point)))
+      (put-text-property start (point) :k8s-pod pod))
     (widget-insert
      (format " %s %s"
              (propertize (plist-get pod-data 'name)
@@ -234,30 +289,30 @@
 (defun timonier--k8s-mode-render-pods (pods)
   "Render Kubernetes `PODS'."
   (widget-insert (format "\n== PODS ==\n\n"))
-  (let ((start (point)))
-    (dotimes (i (length pods))
-      (let ((pod (elt pods i)))
-        (timonier--k8s-mode-render-pod pod)
-        (put-text-property start (point) :k8s-pod pod)))
-    (widget-insert "\n")))
+  (dotimes (i (length pods))
+    (let ((pod (elt pods i)))
+      (timonier--k8s-mode-render-pod pod)))
+  (widget-insert "\n"))
 
 
 (defun timonier--k8s-mode-render-service (service)
   "Render a Kubernetes `SERVICE' to the Timonier buffer."
   (let* ((service-data (timonier--k8s-extract-service-informations service)))
     (insert (all-the-icons-octicon "link-external"))
+    (let ((start (point)))
+      (put-text-property start (point) :k8s-service service))
     (widget-insert
      (format " %s"
              (propertize (plist-get service-data 'name)
                          'face 'timonier-k8s-mode-service-face))
      (format "\n  %s: %s"
              (propertize "Namespace"
-                          'face 'timonier-k8s-mode-key-face)
+                         'face 'timonier-k8s-mode-key-face)
              (propertize (plist-get service-data 'namespace)
                          'face 'timonier-k8s-mode-namespace-face))
      (format "\n  %s: %s"
              (propertize "ClusterIP"
-                          'face 'timonier-k8s-mode-key-face)
+                         'face 'timonier-k8s-mode-key-face)
              (plist-get service-data 'cluster-ip))
      (format "\n  %s: %s"
              (propertize "Endpoints"
@@ -276,18 +331,18 @@
 (defun timonier--k8s-mode-render-services (services)
   "Render Kubernetes `SERVICES'."
   (widget-insert (format "\n== SERVICES ==\n\n"))
-  (let ((start (point)))
-    (dotimes (i (length services))
-      (let ((service (elt services i)))
-        (timonier--k8s-mode-render-service service)
-        (put-text-property start (point) :k8s-service service)))
-    (widget-insert "\n")))
+  (dotimes (i (length services))
+    (let ((service (elt services i)))
+      (timonier--k8s-mode-render-service service)))
+  (widget-insert "\n"))
 
 
 (defun timonier--k8s-mode-render-node (node)
   "Render a Kubernetes `NODE' to the Timonier buffer."
   (let* ((node-data (timonier--k8s-extract-node-informations node)))
     (insert (all-the-icons-octicon "server"))
+    (let ((start (point)))
+      (put-text-property start (point) :k8s-node node))
     (widget-insert
      (format " %s %s"
              (propertize (plist-get node-data 'name)
@@ -304,12 +359,10 @@
 (defun timonier--k8s-mode-render-nodes (nodes)
   "Render Kubernetes `NODES'."
   (widget-insert (format "\n== NODES ==\n\n"))
-  (let ((start (point)))
-    (dotimes (i (length nodes))
-      (let ((node (elt nodes i)))
-        (timonier--k8s-mode-render-node node)
-        (put-text-property start (point) :k8s-node node)))
-    (widget-insert "\n")))
+  (dotimes (i (length nodes))
+    (let ((node (elt nodes i)))
+      (timonier--k8s-mode-render-node node)))
+  (widget-insert "\n"))
 
 
 ;; ------------------

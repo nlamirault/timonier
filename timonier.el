@@ -5,7 +5,7 @@
 ;; Version: 0.1.0
 ;; Keywords: kubernetes, docker
 
-;; Package-Requires: ((s "1.11.0") (dash "2.12.0") (pkg-info "0.5.0") (magit-popup "2.8.0") (request "0.2.0") (all-the-icons))
+;; Package-Requires: ((s "1.11.0") (dash "2.12.0") (pkg-info "0.5.0") (hydra "0.13.6") (request "0.2.0") (all-the-icons))
 
 ;; Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
