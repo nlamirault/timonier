@@ -38,11 +38,9 @@
 
 (defun timonier--get-headers ()
   "Generate HTTP headers for Travis API."
-  (let ((headers (list (cons "User-Agent"
-                             (s-concat timonier--user-agent
-                                       "/"
-                                       (timonier--library-version))))))
-    headers))
+  `(("User-Agent" . (concat timonier--user-agent
+                            "/"
+                            (timonier--library-version)))))
 
 
 (defun timonier--perform-http-request (method uri params status-code)
