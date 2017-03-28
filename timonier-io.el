@@ -19,10 +19,7 @@
 
 
 (defun timonier--assoc-cdr (key list)
-  (let ((result (cdr (assoc key list))))
-    (if result
-        result
-      "")))
+  (or (cdr (assoc key list)) ""))
 
 
 (provide 'timonier-io)

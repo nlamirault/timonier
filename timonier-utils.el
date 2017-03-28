@@ -28,29 +28,6 @@
 
 ;; Errors
 
-(eval-and-compile
-  (unless (fboundp 'define-error)
-    ;; Shamelessly copied from Emacs trunk :)
-    (defun define-error (name message &optional parent)
-      "Define NAME as a new error signal.
-MESSAGE is a string that will be output to the echo area if such an error
-is signaled without being caught by a `condition-case'.
-PARENT is either a signal or a list of signals from which it inherits.
-Defaults to `error'."
-      (unless parent (setq parent 'error))
-      (let ((conditions
-             (if (consp parent)
-                 (apply #'nconc
-                        (mapcar (lambda (parent)
-                                  (cons parent
-                                        (or (get parent 'error-conditions)
-                                            (error "Unknown signal `%s'" parent))))
-                                parent))
-               (cons parent (get parent 'error-conditions)))))
-        (put name 'error-conditions
-             (delete-dups (copy-sequence (cons name conditions))))
-        (when message (put name 'error-message message))))))
-
 (define-error 'timonier-error "Timonier error")
 
 (define-error 'timonier-k8s-error "Timonier Kubernetes Error" 'timonier-error)
@@ -61,11 +38,9 @@ Defaults to `error'."
 
 (defun timonier--get-headers ()
   "Generate HTTP headers for Travis API."
-  (let ((headers (list (cons "User-Agent"
-                             (s-concat timonier--user-agent
-                                       "/"
-                                       (timonier--library-version))))))
-    headers))
+  `(("User-Agent" . (concat timonier--user-agent
+                            "/"
+                            (timonier--library-version)))))
 
 
 (defun timonier--perform-http-request (method uri params status-code)
