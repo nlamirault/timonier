@@ -56,8 +56,8 @@
   :group 'timonier-k8s-mode)
 
 (defcustom timonier-k8s-mode-line
-  '(:eval (format " Timonier/Kubernetes " ))
-          "Mode line lighter for Timonier."
+  " Timonier/Kubernetes "
+  "Mode line lighter for Timonier."
   :group 'timonier-k8s-mode
   :type 'sexp
   :risky t)
