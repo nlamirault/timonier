@@ -1,4 +1,4 @@
-;;; timonier.el --- Timonier, Manage Kubernetes Applications from Emacs
+;;; timonier.el --- Manage Kubernetes Applications
 
 ;; Author: Nicolas Lamirault <nicolas.lamirault@gmail.com>
 ;; URL: https://github.com/nlamirault/timonier
