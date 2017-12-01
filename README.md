@@ -1,5 +1,8 @@
 # Timonier
 
+DEPRECATED. See: https://github.com/chrisbarrett/kubernetes-el
+
+
 [![Coverage Status](https://coveralls.io/repos/nlamirault/timonier/badge.png?branch=master)](https://coveralls.io/r/nlamirault/timonier?branch=master)
 
 Master :
